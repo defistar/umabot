@@ -1,0 +1,9 @@
+ 10511000 -> 10922559 (file: Week_1_Mining_Rewards_10511000_10922559.json)
+ 
+ node ./CalculateBalancerLPRewards.js --network mainnet_mnemonic --poolAddress="0x0099447ef539718bba3c4d4d4b4491d307eedc53" --fromDate="2020-09-24" --toDate="2020-09-24" --week=1 --fromBlock=10511000 --toBlock=10922559 --tokenName=PERL —-blocksPerSnapshot=256 
+
+ node ./CalculateBalancerLPRewards.js --network mainnet_mnemonic --poolAddress="0x0099447ef539718bba3c4d4d4b4491d307eedc53" --fromDate="2020-09-24" --toDate="2020-09-24" --week=1 --fromBlock=10511000 --toBlock=10922559 --tokenName=PERL —-blocksPerSnapshot=30 
+
+ node ./CalculateBalancerLPRewards.js --network mainnet_mnemonic --poolAddress="0x0099447ef539718bba3c4d4d4b4491d307eedc53" --fromDate="2020-09-24" --toDate="2020-09-24" --week=1 --fromBlock=10922000 --toBlock=10922559 --tokenName=PERL —-blocksPerSnapshot=1 
+
+ node ./CalculateBalancerLPRewards.js --network mainnet_mnemonic --poolAddress="0x0099447ef539718bba3c4d4d4b4491d307eedc53" --fromDate="2020-09-24" --toDate="2020-09-24" --week=1 --fromBlock=10922459 --toBlock=10922559 --tokenName=PERL —-blocksPerSnapshot=1 
