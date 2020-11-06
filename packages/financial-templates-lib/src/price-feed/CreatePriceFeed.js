@@ -2,7 +2,7 @@ const assert = require ('assert');
 const {ChainId, Token, Pair, TokenAmount} = require ('@uniswap/sdk');
 const {MedianizerPriceFeed} = require ('./MedianizerPriceFeed');
 const {CryptoWatchPriceFeed} = require ('./CryptoWatchPriceFeed');
-const {IntrinioPriceFeed} = require ('./IntrinioPriceFeed');
+const {TiingoPriceFeed} = require ('./TiingoPriceFeed');
 const {UniswapPriceFeed} = require ('./UniswapPriceFeed');
 const {BalancerPriceFeed} = require ('./BalancerPriceFeed');
 
@@ -42,7 +42,7 @@ async function createPriceFeed (logger, web3, networker, getTime, config) {
       config.invertPrice, // Not checked in config because this parameter just defaults to false.
       config.decimals // This defaults to 18 unless supplied by user
     );
-  } else if (config.type === 'intrinio') {
+  } else if (config.type === 'tiingo') {
     const requiredFields = [
       'exchange',
       'pair',
@@ -56,11 +56,11 @@ async function createPriceFeed (logger, web3, networker, getTime, config) {
 
     logger.debug ({
       at: 'createPriceFeed',
-      message: 'Creating IntrinioPriceFeed',
+      message: 'Creating TiingoPriceFeed',
       config,
     });
 
-    return new IntrinioPriceFeed (
+    return new TiingoPriceFeed (
       logger,
       web3,
       config.apiKey,
