@@ -174,7 +174,7 @@ class Liquidator {
 
     // compute krbnperl price
     // krbnperl = (krbn-usd price) * ( 1 / perl-usd price)
-    const price = carbonPrice.div(this._invertPriceSafely(cryptoWatchPrice));
+    const price = carbonPrice.mul(this._invertPriceSafely(cryptoWatchPrice));
 
     if (!price) {
       throw new Error("Cannot compute price for carbonperl");
