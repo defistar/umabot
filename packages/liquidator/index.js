@@ -34,6 +34,7 @@ const { getWeb3 } = require("@uma/common");
  * @param {Number} errorRetries The number of times the execution loop will re-try before throwing if an error occurs.
  * @param {Number} errorRetriesTimeout The amount of milliseconds to wait between re-try iterations on failed loops.
  * @param {Object} priceFeedConfig Configuration to construct the price feed object.
+ * @param {Object} carbonPriceFeedConfig Configuration to construct the price feed object.
  * @param {Object} [liquidatorConfig] Configuration to construct the liquidator.
  * @param {String} [liquidatorOverridePrice] Optional String representing a Wei number to override the liquidator price feed.
  * @return None or throws an Error.
@@ -47,6 +48,7 @@ async function run({
   errorRetries,
   errorRetriesTimeout,
   priceFeedConfig,
+  carbonPriceFeedConfig,
   liquidatorConfig,
   liquidatorOverridePrice
 }) {
@@ -122,6 +124,7 @@ async function run({
       errorRetries,
       errorRetriesTimeout,
       priceFeedConfig: customPricefeedConfig,
+      carbonPriceFeedConfig,
       liquidatorConfig,
       liquidatorOverridePrice
     });
@@ -136,6 +139,18 @@ async function run({
     logger.debug({
       at: "Liquidator#index",
       message: `Using an ${customPricefeedConfig.decimals} decimal price feed`
+    });
+
+    // Load unlocked web3 accounts, get the networkId and set up price feed.
+    const [carbonPriceFeed] = await Promise.all([
+      createReferencePriceFeedForEmp(logger, web3, new Networker(logger), getTime, empAddress, carbonPriceFeedConfig)
+    ]);
+    if (!priceFeed) {
+      throw new Error("carbon Price feed config is invalid");
+    }
+    logger.debug({
+      at: "Liquidator#index",
+      message: `Using an ${carbonPriceFeedConfig.decimals} decimal price feed`
     });
 
     // Create the ExpiringMultiPartyClient to query on-chain information, GasEstimator to get latest gas prices and an
@@ -163,6 +178,7 @@ async function run({
       votingContract: voting,
       syntheticToken,
       priceFeed,
+      carbonPriceFeed,
       account: accounts[0],
       empProps,
       liquidatorConfig
@@ -270,6 +286,10 @@ async function Poll(callback) {
       // "lookback":7200, "minTimeBetweenUpdates":60,"medianizedFeeds":[{"type":"cryptowatch","exchange":"coinbase-pro"},
       // {"type":"cryptowatch","exchange":"binance"}]}
       priceFeedConfig: process.env.PRICE_FEED_CONFIG ? JSON.parse(process.env.PRICE_FEED_CONFIG) : null,
+
+      // Read carbon price feed configuration from an environment variable. This can be tiingo or some other priceFeed with carbon data
+      carbonPriceFeedConfig: process.env.CARBON_PRICE_FEED_CONFIG ? JSON.parse(process.env.CARBON_PRICE_FEED_CONFIG) : null,
+
       // If there is a liquidator config, add it. Else, set to null. This config contains crThreshold,liquidationDeadline,
       // liquidationMinPrice, txnGasLimit & logOverrides. Example config:
       // {"crThreshold":0.02,  -> Liquidate if a positions collateral falls more than this % below the min CR requirement

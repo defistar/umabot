@@ -18,7 +18,7 @@ class Liquidator {
    * @param {Object} votingContract DVM to query price requests.
    * @param {Object} syntheticToken Synthetic token (tokenCurrency).
    * @param {Object} priceFeed Module used to query the current token price.
-   * @param {Object} tiingoPriceFeed Module used to query the current carbon Price.
+   * @param {Object} carbonPriceFeed Module used to query the current carbon Price.
    * @param {String} account Ethereum account from which to send txns.
    * @param {Object} [config] Contains fields with which constructor will attempt to override defaults.
    * @param {Object} empProps Contains EMP contract state data. Expected:
@@ -35,7 +35,7 @@ class Liquidator {
     votingContract,
     syntheticToken,
     priceFeed,
-    tiingoPriceFeed,
+    carbonPriceFeed,
     account,
     empProps,
     config
@@ -64,8 +64,8 @@ class Liquidator {
     // Instance of the price feed to get the realtime token price.
     this.priceFeed = priceFeed;
 
-    //Instance of tiingo Price Feed to get the realtime carbon price.
-    this.tiingoPriceFeed = tiingoPriceFeed;
+    //Instance of carbonPriceFeed to get the realtime carbon price.
+    this.carbonPriceFeed = carbonPriceFeed;
 
     // The EMP contract collateralization Ratio is needed to calculate minCollateralPerToken.
     this.empCRRatio = empProps.crRatio;
@@ -142,7 +142,7 @@ class Liquidator {
 
   // Update the empClient, gasEstimator and price feed. If a client has recently updated then it will do nothing.
   async update() {
-    await Promise.all([this.empClient.update(), this.gasEstimator.update(), this.priceFeed.update(), this.tiingoPriceFeed.update()]);
+    await Promise.all([this.empClient.update(), this.gasEstimator.update(), this.priceFeed.update(), this.carbonPriceFeed.update()]);
   }
 
   // Queries underCollateralized positions and performs liquidations against any under collateralized positions.
@@ -163,13 +163,13 @@ class Liquidator {
       throw new Error("Cannot liquidate: cryptoWatchPrice-feed returned invalid value");
     }
 
-    // If an override is provided, use that price. Else, get the latest price from the tiingo price feed.
+    // If an override is provided, use that price. Else, get the latest price from the carbon price feed.
     const carbonPrice = liquidatorCarbonOverridePrice
     ? this.toBN(liquidatorCarbonOverridePrice.toString())
-    : this.tiingoPriceFeed.getCurrentPrice();
+    : this.carbonPriceFeed.getCurrentPrice();
 
     if (!carbonPrice) {
-      throw new Error("Cannot liquidate: tiingo-Price-feed returned invalid value");
+      throw new Error("Cannot liquidate: carbon-Price-feed returned invalid value");
     }
 
     // compute krbnperl price
