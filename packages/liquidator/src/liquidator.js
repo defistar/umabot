@@ -155,26 +155,42 @@ class Liquidator {
     });
 
     // If an override is provided, use that price. Else, get the latest price from the price feed.
-    const cryptoWatchPrice = liquidatorOverridePrice
+    var cryptoWatchPrice = liquidatorOverridePrice
       ? this.toBN(liquidatorOverridePrice.toString())
       : this.priceFeed.getCurrentPrice();
 
+    if(this.priceFeed.invertPrice == "true"){
+      cryptoWatchPrice = this._invertPriceSafely(cryptoWatchPrice);
+    }
     if (!cryptoWatchPrice) {
       throw new Error("Cannot liquidate: cryptoWatchPrice-feed returned invalid value");
     }
 
     // If an override is provided, use that price. Else, get the latest price from the carbon price feed.
-    const carbonPrice = liquidatorCarbonOverridePrice
+    var carbonPrice = liquidatorCarbonOverridePrice
     ? this.toBN(liquidatorCarbonOverridePrice.toString())
     : this.carbonPriceFeed.getCurrentPrice();
+
+    if(this.carbonPriceFeed.invertPrice == "true"){
+      carbonPrice = this._invertPriceSafely(carbonPrice);
+    }
 
     if (!carbonPrice) {
       throw new Error("Cannot liquidate: carbon-Price-feed returned invalid value");
     }
 
-    // compute krbnperl price
-    // krbnperl = (krbn-usd price) * ( 1 / perl-usd price)
-    const price = carbonPrice.mul(this._invertPriceSafely(cryptoWatchPrice));
+    var price;
+    if(carbonPrice && cryptoWatchPrice){
+      // compute krbnperl price
+      // krbnperl = (krbn-usd price) * ( 1 / perl-usd price)
+       price = carbonPrice.mul(this._invertPriceSafely(cryptoWatchPrice));
+    }else if(!carbonPrice && cryptoWatchPrice){
+      price = cryptoWatchPrice
+    }else if(carbonPrice && !cryptoWatchPrice){
+      price = carbonPrice
+    }else{
+      price = null;
+    }
 
     if (!price) {
       throw new Error("Cannot compute price for carbonperl");
