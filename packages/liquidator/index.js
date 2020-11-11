@@ -285,10 +285,10 @@ async function Poll(callback) {
       // from the EMP_ADDRESS. EG with medianizer: {"type":"medianizer","pair":"ethbtc",
       // "lookback":7200, "minTimeBetweenUpdates":60,"medianizedFeeds":[{"type":"cryptowatch","exchange":"coinbase-pro"},
       // {"type":"cryptowatch","exchange":"binance"}]}
-      priceFeedConfig: process.env.PRICE_FEED_CONFIG ? JSON.parse(process.env.PRICE_FEED_CONFIG) : null,
+      priceFeedConfig: process.env.PRICE_FEED_CONFIG && JSON.parse(process.env.PRICE_FEED_CONFIG).length > 0 ? JSON.parse(process.env.PRICE_FEED_CONFIG)[0] : null,
 
       // Read carbon price feed configuration from an environment variable. This can be tiingo or some other priceFeed with carbon data
-      carbonPriceFeedConfig: process.env.CARBON_PRICE_FEED_CONFIG ? JSON.parse(process.env.CARBON_PRICE_FEED_CONFIG) : null,
+      carbonPriceFeedConfig: process.env.CARBON_PRICE_FEED_CONFIG && JSON.parse(process.env.PRICE_FEED_CONFIG).length > 1 ? JSON.parse(process.env.PRICE_FEED_CONFIG)[1] : null,
 
       // If there is a liquidator config, add it. Else, set to null. This config contains crThreshold,liquidationDeadline,
       // liquidationMinPrice, txnGasLimit & logOverrides. Example config:
