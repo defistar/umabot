@@ -134,8 +134,6 @@ class TiingoPriceFeed extends PriceFeedInterface {
       `https://api.tiingo.com/${this.exchange}/${this.pair}` +
       (this.apiKey ? `?apikey=${this.apiKey}` : "");
 
-  
-
     // 2. Send requests.
     const [priceResponse] = await Promise.all([
       this.networker.getJson(priceUrl)

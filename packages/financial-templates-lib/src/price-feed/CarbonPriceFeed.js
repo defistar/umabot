@@ -1,10 +1,10 @@
 const { PriceFeedInterface } = require("./PriceFeedInterface");
 const { parseFixed } = require("@ethersproject/bignumber");
 
-// An implementation of PriceFeedInterface that uses Intrinio to retrieve prices.
-class IntrinioPriceFeed extends PriceFeedInterface {
+// An implementation of PriceFeedInterface that uses Tiingo to retrieve prices.
+class CarbonPriceFeed extends PriceFeedInterface {
   /**
-   * @notice Constructs the IntrinioPriceFeed.
+   * @notice Constructs the CarbonPriceFeed.
    * @param {Object} logger Winston module used to send logs.
    * @param {Object} web3 Provider from truffle instance to connect to Ethereum network.
    * @param {String} apiKey optional CW API key. Note: these API keys are rate-limited.
@@ -48,7 +48,7 @@ class IntrinioPriceFeed extends PriceFeedInterface {
 
     this.toBN = this.web3.utils.toBN;
 
-    // Use Intrinio's most granular option, one minute.
+    // Use Tiingo's most granular option, one minute.
     this.ohlcPeriod = 60;
 
     this.convertDecimals = number => {
@@ -112,7 +112,7 @@ class IntrinioPriceFeed extends PriceFeedInterface {
     // Return early if the last call was too recent.
     if (this.lastUpdateTime !== undefined && this.lastUpdateTime + this.minTimeBetweenUpdates > currentTime) {
       this.logger.debug({
-        at: "IntrinioPriceFeed",
+        at: "CarbonPriceFeed",
         message: "Update skipped because the last one was too recent",
         currentTime: currentTime,
         lastUpdateTimestamp: this.lastUpdateTime,
@@ -122,33 +122,20 @@ class IntrinioPriceFeed extends PriceFeedInterface {
     }
 
     this.logger.debug({
-      at: "IntrinioPriceFeed",
+      at: "CarbonPriceFeed",
       message: "Updating",
       currentTime: currentTime,
       lastUpdateTimestamp: this.lastUpdateTime
     });
 
-    // Round down to the nearest ohlc period so the queries captures the OHLC of the period *before* this earliest
-    // timestamp (because the close of that OHLC may be relevant).
-    const earliestHistoricalTimestamp = Math.floor((currentTime - this.lookback) / this.ohlcPeriod) * this.ohlcPeriod;
-
     // 1. Construct URLs.
-    // See https://docs.cryptowat.ch/rest-api/markets/price for how this url is constructed.
+    // sample URL https://api.tiingo.com/iex/krbn?token=1390exxxxx
     const priceUrl =
-      `https://api.cryptowat.ch/markets/${this.exchange}/${this.pair}/price` +
+      `https://api.tiingo.com/${this.exchange}/${this.pair}` +
       (this.apiKey ? `?apikey=${this.apiKey}` : "");
 
-    // See https://docs.cryptowat.ch/rest-api/markets/ohlc for how this url is constructed.
-    const ohlcUrl = [
-      `https://api.cryptowat.ch/markets/${this.exchange}/${this.pair}/ohlc`,
-      `?after=${earliestHistoricalTimestamp}`,
-      `&periods=${this.ohlcPeriod}`,
-      this.apiKey ? `&apikey=${this.apiKey}` : ""
-    ].join("");
-
     // 2. Send requests.
-    const [ohlcResponse, priceResponse] = await Promise.all([
-      this.networker.getJson(ohlcUrl),
+    const [priceResponse] = await Promise.all([
       this.networker.getJson(priceUrl)
     ]);
 
@@ -157,9 +144,6 @@ class IntrinioPriceFeed extends PriceFeedInterface {
       throw new Error(`🚨Could not parse price result from url ${priceUrl}: ${JSON.stringify(priceResponse)}`);
     }
 
-    if (!ohlcResponse || !ohlcResponse.result || !ohlcResponse.result[this.ohlcPeriod]) {
-      throw new Error(`🚨Could not parse ohlc result from url ${ohlcUrl}: ${JSON.stringify(ohlcResponse)}`);
-    }
 
     // 4. Parse results.
     // Return data structure:
@@ -170,41 +154,9 @@ class IntrinioPriceFeed extends PriceFeedInterface {
     // }
     const newPrice = this.convertDecimals(priceResponse.result.price);
 
-    // Return data structure:
-    // {
-    //   "result": {
-    //     "OhlcInterval": [
-    //     [
-    //       CloseTime,
-    //       OpenPrice,
-    //       HighPrice,
-    //       LowPrice,
-    //       ClosePrice,
-    //       Volume,
-    //       QuoteVolume
-    //     ],
-    //     ...
-    //     ]
-    //   }
-    // }
-    // For more info, see: https://docs.cryptowat.ch/rest-api/markets/ohlc
-    const newHistoricalPricePeriods = ohlcResponse.result[this.ohlcPeriod.toString()]
-      .map(ohlc => ({
-        // Output data should be a list of objects with only the open and close times and prices.
-        openTime: ohlc[0] - this.ohlcPeriod,
-        closeTime: ohlc[0],
-        openPrice: this.convertDecimals(ohlc[1]),
-        closePrice: this.convertDecimals(ohlc[4])
-      }))
-      .sort((a, b) => {
-        // Sorts the data such that the oldest elements come first.
-        return a.openTime - b.openTime;
-      });
-
     // 5. Store results.
     this.currentPrice = newPrice;
-    this.historicalPricePeriods = newHistoricalPricePeriods;
-    this.lastUpdateTime = currentTime;
+    this.quoteTimestamp = currentTime;
   }
 
   _invertPriceSafely(priceBN) {
@@ -219,5 +171,5 @@ class IntrinioPriceFeed extends PriceFeedInterface {
 }
 
 module.exports = {
-  IntrinioPriceFeed
+  CarbonPriceFeed
 };

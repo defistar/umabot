@@ -2,7 +2,7 @@ const assert = require ('assert');
 const {ChainId, Token, Pair, TokenAmount} = require ('@uniswap/sdk');
 const {MedianizerPriceFeed} = require ('./MedianizerPriceFeed');
 const {CryptoWatchPriceFeed} = require ('./CryptoWatchPriceFeed');
-const {TiingoPriceFeed} = require ('./TiingoPriceFeed');
+const {CarbonPriceFeed} = require ('./CarbonPriceFeed');
 const {UniswapPriceFeed} = require ('./UniswapPriceFeed');
 const {BalancerPriceFeed} = require ('./BalancerPriceFeed');
 
@@ -56,11 +56,11 @@ async function createPriceFeed (logger, web3, networker, getTime, config) {
 
     logger.debug ({
       at: 'createPriceFeed',
-      message: 'Creating TiingoPriceFeed',
+      message: 'Creating CarbonPriceFeed',
       config,
     });
 
-    return new TiingoPriceFeed (
+    return new CarbonPriceFeed (
       logger,
       web3,
       config.apiKey,

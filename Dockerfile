@@ -22,7 +22,7 @@
 FROM node:14
 
 # All source code and execution happens from the protocol directory.
-WORKDIR /protocol
+WORKDIR /umabot
 
 # Copy the latest state of the repo into the protocol directory.
 COPY . ./
